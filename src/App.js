@@ -2,31 +2,35 @@ import { useEffect, useState } from "react";
 
 function App() {
   const [price, setPrice] = useState();
-  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
 
   useEffect(() => {
     let interval;
-    const fetchBitcoinPrice = () => {
-      fetch("https://api.coincap.io/v2/assets/bitcoin")
-        .then((response) => response.json())
-        .then((result) => {
-          // Format the price to 2 decimal places
-          const bitcoinPrice = (+result?.data?.priceUsd).toFixed(2);
-          setPrice(bitcoinPrice);
-        })
-        .catch((error) => console.log("error", error));
+    const fetchData = async () => {
+      try {
+        const response = await fetch(
+          "https://api.coincap.io/v2/assets/bitcoin"
+        );
+        const result = await response.json();
+        const bitcoinPrice = (+result?.data?.priceUsd).toFixed(2);
+        setPrice(bitcoinPrice);
+      } catch (error) {
+        console.log("error", error);
+      }
     };
+
     if (!price) {
-      fetchBitcoinPrice();
+      // Fetch price for the first time when the app is loaded
+      fetchData();
     }
+
     if (autoRefresh) {
       interval = setInterval(() => {
-        fetchBitcoinPrice();
+        fetchData();
       }, 5 * 1000);
     }
 
     return () => {
-      // Clear the previous interval before the component gets updated
       clearInterval(interval);
     };
   }, [autoRefresh, price]);
